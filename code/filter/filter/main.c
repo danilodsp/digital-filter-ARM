@@ -25,17 +25,20 @@ char tmp3[9];
 bool menos;
 bool ponto;
 
-float vf[N];
-unsigned char vb[N];
+float vf[100];
+unsigned char vb[400];
 
 void ftoa(float f,char *buf);
 
 int
 main(void)
 {
-	int n=0, i=0, c=0, j=0;
-	menos = false;
-	ponto = false;
+	int n=0, i=0, j=0;
+
+	y[0] = 0;
+	y[1] = 0;
+	y[2] = 0;
+	y[3] = 0;
 
 	SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN |
 			SYSCTL_XTAL_16MHZ);
@@ -48,7 +51,7 @@ main(void)
 
 	GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
-	UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200,
+	UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 9600,
 			(UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
 					UART_CONFIG_PAR_NONE));
 
@@ -58,121 +61,26 @@ main(void)
 	{
 		vb[n] = UARTCharGet(UART0_BASE);
 
-		/*if(tmp == 32){ // espaco
-			if(menos)
-				x[n] = -x[n];
-
-			menos = false;
-			ponto = false;
-			n++;
-			x[n] = 0;
-			c = 0;
-		}
-		if(tmp == 45){ // sinal menos
-			menos = true;
-			ponto = false;
-			n++;
-			c = 0;;
-		}
-		if(tmp == 46){ // ponto
-			ponto = true;
-			c = 0;
-		}
-		if(tmp == 33){
-			for(j=0;j<(n+1);j++){
-				ftoa(x[j], &tmp3);
-
-				do{
-					UARTCharPut(UART0_BASE, tmp3[i++]);
-				}while(i<sizeof tmp3-1);
-				i=0;
-				UARTCharPut(UART0_BASE, 0x20);
-			}
-			n = 0;
-		}
-
-		if(tmp > 47){
-			tmp = tmp - 48;
-
-			if(ponto){
-				tmp2 = tmp*(pow(10,c-1));
-				x[n] = x[n] + tmp2;
-				c--;
-			}
-			else{
-				tmp2 = (x[n]*pow(10,c));
-				x[n] = tmp2 + tmp;
-				c++;
-			}
-		}*/
-
-
-
-		//xn = x[n];
-
-		/*if(n > 3){
-			for(i=0;i<4;i++){
-				yn = yn + x[n - i]*(0.25);
-			}
-		}
-
-		yn = xn;
-
-		if(n>0){
-			yn2 = x[n-1];
-		}
-		else{
-			yn2 = yn;
-		}*/
-
-
-
 		n++;
 	}
-	while(n<100);
+	while(n<400);
 
 	memcpy(vf, vb, sizeof(unsigned char)*400);
 
-	for(i=0;i<n;i++){
-		vf[i] = vf[i] + 1;
+	for(j=0;j<100;j++){
+		if(n > 3){
+			for(i=0;i<4;i++){
+				y[j] = y[j] + vf[j - i]*(0.25);
+			}
+		}
 	}
 
-	memcpy(vb, vf, sizeof(float)*100);
+	memcpy(vb, y, sizeof(float)*100);
 
 	for(i=0;i<n;i++){
+		//SysCtlDelay(5000);
 		UARTCharPut(UART0_BASE, vb[i]);
 	}
-	//UARTCharPut(UART0_BASE, *vb);
-
-	//UARTCharPut(UART0_BASE, '@');
 
 	return(0);
-}
-
-void ftoa(float f,char *buf)
-{
-	int pos=0,ix,dp,num;
-	if (f<0)
-	{
-		buf[pos++]='-';
-		f = -f;
-	}
-	dp=0;
-	while (f>=10.0)
-	{
-		f=f/10.0;
-		dp++;
-	}
-	for (ix=1;ix<8;ix++)
-	{
-		num = f;
-		f=f-num;
-		if (num>9)
-			buf[pos++]='#';
-		else
-			buf[pos++]='0'+num;
-		if (dp==0) buf[pos++]='.';
-		f=f*10.0;
-		dp--;
-	}
 }

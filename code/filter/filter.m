@@ -3,7 +3,7 @@
 
 clear
 
-s = serial('COM3','BaudRate',115200,'InputBufferSize',8*1024,'OutputBufferSize',8*1024,'Timeout',10);
+s = serial('COM3','BaudRate',9600,'InputBufferSize',8*1024,'OutputBufferSize',8*1024,'Timeout',10);
 fopen(s);
 
 %%
@@ -22,7 +22,8 @@ sinal = u + ruido;
 
 clear R
 fwrite(s,sinal,'float');
-R = fread(s,[1,100],'float');
+R = fread(s,100,'float');
+%R = fscanf(s,'%d');
 
 %fwrite(s,num2str(sinal,'%f '),'char');
 %fwrite(s,'!','char');
