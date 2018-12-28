@@ -10,6 +10,7 @@ ORDERED_OBJS += \
 $(GEN_CMDS__FLAG) \
 "./main.obj" \
 "./tm4c123gh6pm_startup_ccs.obj" \
+"./uartstdio.obj" \
 "../tm4c123gh6pm.cmd" \
 -l"libc.a" \
 -l"C:\ti\TivaWare_C_Series-2.1.0.12573\driverlib\ccs\Debug\driverlib.lib" \
@@ -110,40 +111,40 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXE_OUTPUTS += \
-uart1.out \
+filtro1.out \
 
 EXE_OUTPUTS__QUOTED += \
-"uart1.out" \
+"filtro1.out" \
 
 BIN_OUTPUTS += \
-uart1.hex \
+filtro1.hex \
 
 BIN_OUTPUTS__QUOTED += \
-"uart1.hex" \
+"filtro1.hex" \
 
 
 # All Target
-all: uart1.out
+all: filtro1.out
 
 # Tool invocations
-uart1.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
+filtro1.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: ARM Linker'
-	"c:/ti/ccsv6/tools/compiler/arm_5.1.6/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 --abi=eabi -me -g --gcc --define=ccs="ccs" --define=PART_TM4C123GH6PM --display_error_number --diag_warning=225 --diag_wrap=off -z -m"uart1.map" --heap_size=0 --stack_size=512 -i"c:/ti/ccsv6/tools/compiler/arm_5.1.6/lib" -i"c:/ti/ccsv6/tools/compiler/arm_5.1.6/include" --reread_libs --warn_sections --display_error_number --diag_wrap=off --xml_link_info="uart1_linkInfo.xml" --rom_model -o "uart1.out" $(ORDERED_OBJS)
+	"c:/ti/ccsv6/tools/compiler/arm_5.1.6/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 --abi=eabi -me -g --gcc --define=ccs="ccs" --define=PART_TM4C123GH6PM --display_error_number --diag_warning=225 --diag_wrap=off -z -m"filtro1.map" --heap_size=0 --stack_size=512 -i"c:/ti/ccsv6/tools/compiler/arm_5.1.6/lib" -i"c:/ti/ccsv6/tools/compiler/arm_5.1.6/include" --reread_libs --warn_sections --display_error_number --diag_wrap=off --xml_link_info="filtro1_linkInfo.xml" --rom_model -o "filtro1.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-uart1.hex: $(EXE_OUTPUTS)
+filtro1.hex: $(EXE_OUTPUTS)
 	@echo 'Invoking: ARM Hex Utility'
-	"c:/ti/ccsv6/tools/compiler/arm_5.1.6/bin/armhex"  -o "uart1.hex" $(EXE_OUTPUTS__QUOTED)
+	"c:/ti/ccsv6/tools/compiler/arm_5.1.6/bin/armhex"  -o "filtro1.hex" $(EXE_OUTPUTS__QUOTED)
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)$(BIN_OUTPUTS__QUOTED)
-	-$(RM) "main.pp" "tm4c123gh6pm_startup_ccs.pp" 
-	-$(RM) "main.obj" "tm4c123gh6pm_startup_ccs.obj" 
+	-$(RM) "main.pp" "tm4c123gh6pm_startup_ccs.pp" "uartstdio.pp" 
+	-$(RM) "main.obj" "tm4c123gh6pm_startup_ccs.obj" "uartstdio.obj" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
