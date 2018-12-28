@@ -25,10 +25,11 @@ unsigned char bytes[4*T];
 float vf[T];
 
 float sinal[N];
-float aux[N];
+//float aux[N];
 float x[N];
-float y[N];
-uint8_t value;
+//float y[N];
+uint32_t value;
+uint8_t y;
 
 float a0[SECTIONS];
 float a1[SECTIONS];
@@ -42,13 +43,15 @@ int
 main(void)
 {
 	int n=0, m=0, i=0, s=0;
-	uint32_t valor32;
+	float value_adc;
+	float value32;
+	float aux;
 	uint32_t pui32ADC0Value[1];
 
 	/*SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN |
 			SYSCTL_XTAL_16MHZ);*/
-//	SysCtlClockSet(SYSCTL_SYSDIV_10 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
-//			SYSCTL_XTAL_16MHZ);
+	//	SysCtlClockSet(SYSCTL_SYSDIV_10 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
+	//			SYSCTL_XTAL_16MHZ);
 	SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
 			SYSCTL_XTAL_16MHZ);
 
@@ -78,14 +81,25 @@ main(void)
 	ADCSequenceEnable(ADC0_BASE, 3);
 	ADCIntClear(ADC0_BASE, 3);
 
-//	do
-//	{
-//		bytes[n] = UARTCharGet(UART0_BASE);
-//		n++;
-//	}
-//	while(n<(4*T));
+	do
+	{
+		bytes[n] = UARTCharGet(UART0_BASE);
+		n++;
+	}
+	while(n<(4*T));
+
+	memcpy(vf, bytes, sizeof(unsigned char)*4*T);
+
+	memcpy(a0, vf, sizeof(float)*SECTIONS);
+	memcpy(a1, vf+SECTIONS, sizeof(float)*SECTIONS);
+	memcpy(a2, vf+2*SECTIONS, sizeof(float)*SECTIONS);
+	memcpy(b0, vf+3*SECTIONS, sizeof(float)*SECTIONS);
+	memcpy(b1, vf+4*SECTIONS, sizeof(float)*SECTIONS);
+	memcpy(b2, vf+5*SECTIONS, sizeof(float)*SECTIONS);
 
 	value = 0;
+	y=0;
+
 	do
 	{
 		ADCProcessorTrigger(ADC0_BASE, 3);
@@ -96,52 +110,58 @@ main(void)
 
 		//UARTprintf("AIN0 = %4d\r", pui32ADC0Value[0]);
 
-//		SysCtlDelay(SysCtlClockGet() / 12);
+		//		SysCtlDelay(SysCtlClockGet() / 12);
 
-		valor32 = pui32ADC0Value[0];
-		value = (pui32ADC0Value[0]>>4);
+		//value32 = (float) pui32ADC0Value[0];
+		value_adc = pui32ADC0Value[0];
+		value32 = value_adc;
+
+		//value = (pui32ADC0Value[0]>>4);
 		//value++;
 
-		GPIOPinWrite(GPIO_PORTB_BASE, (GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7), value);
+		// Filtro IIR
+		for(s=0; s<SECTIONS; s++){
+			w[s][2] = a0[s]*value32 - a1[s]*w[s][1] - a2[s]*w[s][0];
+			value32 = b0[s]*w[s][2] + b1[s]*w[s][1] + b2[s]*w[s][0];
+			w[s][0] = w[s][1];
+			w[s][1] = w[s][2];
+		}
+		value = floor(((value32/8000.0) + 0.5)*255);
+		y = (value & 0xFF);
+//		y = (pui32ADC0Value[0]>>4);
+
+		GPIOPinWrite(GPIO_PORTB_BASE, (GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7), y);
 
 		//m++;
 	}
 	while(1);
 
-//	memcpy(vf, bytes, sizeof(unsigned char)*4*T);
-//
-//	memcpy(a0, vf, sizeof(float)*SECTIONS);
-//	memcpy(a1, vf+SECTIONS, sizeof(float)*SECTIONS);
-//	memcpy(a2, vf+2*SECTIONS, sizeof(float)*SECTIONS);
-//	memcpy(b0, vf+3*SECTIONS, sizeof(float)*SECTIONS);
-//	memcpy(b1, vf+4*SECTIONS, sizeof(float)*SECTIONS);
-//	memcpy(b2, vf+5*SECTIONS, sizeof(float)*SECTIONS);
-//
-//	memcpy(x, sinal, sizeof(float)*N);
-//
-//	// Filtro direct-form II SOS
-//	memcpy(aux, x, sizeof(unsigned char)*4*N);
-//
-//	for(i=2; i<(N+2); i++){
-//		for(s=0; s<SECTIONS; s++){
-//			w[s][2] = a0[s]*aux[i-2] - a1[s]*w[s][1] - a2[s]*w[s][0];
-//			aux[i-2] = b0[s]*w[s][2] + b1[s]*w[s][1] + b2[s]*w[s][0];
-//			w[s][0] = w[s][1];
-//			w[s][1] = w[s][2];
-//		}
-//		y[i-2] = aux[i-2];
-//	}
-//
-//	memcpy(bytes, y, sizeof(float)*N);
+	//
+	//	memcpy(x, sinal, sizeof(float)*N);
+	//
+	//	// Filtro direct-form II SOS
+	//	memcpy(aux, x, sizeof(unsigned char)*4*N);
+	//
+	//	for(i=2; i<(N+2); i++){
+	//		for(s=0; s<SECTIONS; s++){
+	//			w[s][2] = a0[s]*aux[i-2] - a1[s]*w[s][1] - a2[s]*w[s][0];
+	//			aux[i-2] = b0[s]*w[s][2] + b1[s]*w[s][1] + b2[s]*w[s][0];
+	//			w[s][0] = w[s][1];
+	//			w[s][1] = w[s][2];
+	//		}
+	//		y[i-2] = aux[i-2];
+	//	}
+	//
+	//	memcpy(bytes, y, sizeof(float)*N);
 
-//	for(i=0;i<N;i++){
-//		//SysCtlDelay(5000);
-//		//UARTCharPut(UART0_BASE, bytes[i]);
-//		value = (int) sinal[i];
-//		value = value * 255;
-//
-//		GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, value);
-//	}
+	//	for(i=0;i<N;i++){
+	//		//SysCtlDelay(5000);
+	//		//UARTCharPut(UART0_BASE, bytes[i]);
+	//		value = (int) sinal[i];
+	//		value = value * 255;
+	//
+	//		GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, value);
+	//	}
 
 	return(0);
 }

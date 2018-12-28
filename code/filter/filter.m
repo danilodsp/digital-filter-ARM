@@ -3,20 +3,20 @@ close all
 clc
 
 %% Initializing the serial communication
-
+    
 s = serial('COM3','BaudRate',115200,'InputBufferSize',8*1024,'OutputBufferSize',8*1024,'Timeout',10);
 fopen(s);
 
 %% Creating the signal
 
-Fs = 10000;
+Fs = 100000;
 N = 1000;
 t = 1/Fs:1/Fs:N/Fs;
-u1 = sin(2*pi*1500*t);
-u2 = sin(2*pi*500*t);
-u3 = sin(2*pi*2500*t);
+u1 = sin(2*pi*10*t);
+u2 = sin(2*pi*1000*t);
+u3 = sin(2*pi*60*t);
 ruido = 0.3*randn(1,N);
-sinal = u1 + u2 + u3 + ruido;
+sinal2 = u2;
 
 %% Design filter
 
@@ -24,8 +24,11 @@ sinal = u1 + u2 + u3 + ruido;
 %     'CutoffFrequency1',1000,'CutoffFrequency2',2000, ...
 %     'SampleRate',10000);
 
-[z,p,k] = butter(20,[2*pi*1000 2*pi*2000]/(2*pi*5000),'bandpass');
-SOS = zp2sos(z,p,k);
+%[z,p,k] = butter(20,[2*pi*1000 2*pi*2000]/(2*pi*5000),'bandpass');
+%[z,p,k] = butter(20,[2*pi*1 2*pi*2]/(2*pi*5),'bandpass');
+[z,p,k] = butter(20,[2*pi*1000 2*pi*2000]/(2*pi*50000),'bandpass');
+[z,p,k] = butter(20,[2*pi*10 2*pi*40]/(2*pi*700),'bandpass');
+SOS = zp2sos(z,p,k); 
 [b,a] = sos2tf(SOS);
 
 % SOS = Hd.sosMatrix;
@@ -35,11 +38,11 @@ SOS = zp2sos(z,p,k);
 
 nSamples = 1000;
 
-% bytes_adc = [SOS(:,4)' SOS(:,5)' SOS(:,6)' SOS(:,1)' SOS(:,2)' SOS(:,3)'];
-bytes = [SOS(:,4)' SOS(:,5)' SOS(:,6)' SOS(:,1)' SOS(:,2)' SOS(:,3)' sinal];
+bytes_adc = [SOS(:,4)' SOS(:,5)' SOS(:,6)' SOS(:,1)' SOS(:,2)' SOS(:,3)'];	
+%bytes = [SOS(:,4)' SOS(:,5)' SOS(:,6)' SOS(:,1)' SOS(:,2)' SOS(:,3)' sinal];
 
-% fwrite(s,bytes_adc,'float');
-fwrite(s,bytes,'float');
+fwrite(s,bytes_adc,'float');
+%fwrite(s,bytes,'float');
 y_arm = fread(s,nSamples,'float');
 
 %% Perform the filter in Matlab
@@ -82,7 +85,7 @@ end
 plot((1/N)*abs(fft(sinal)))
 
 % y = filter(Hd,sinal);
-y = sosfilt(SOS,sinal);
+y = sosfilt(SOS,sinal2);
 
 plot((1/N)*abs(fft(y_arm)))
 plot((1/N)*abs(fft(y_matlab)))
